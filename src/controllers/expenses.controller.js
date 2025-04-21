@@ -1,7 +1,47 @@
 const expensesService = require('../services/expenses.service.js');
+const usersService = require('../services/users.service.js');
 
-module.exports.getAllExpenses = (req, res) => {
-  res.send(expensesService.getAllExpenses());
+module.exports.getExpenses = (req, res) => {
+  const { searchParams } = new URL(req.url, 'http://localhost:3000');
+  const userId = searchParams.get('userId');
+  const category = searchParams.get('categories');
+  const fromParam = searchParams.get('from');
+  const toParam = searchParams.get('to');
+
+  if (!userId && !category && !fromParam && !toParam) {
+    res.send(expensesService.getExpenses());
+
+    return;
+  }
+
+  const fromDate = Date.parse(fromParam);
+  const toDate = Date.parse(toParam);
+
+  let newExpenses = [];
+
+  if (userId) {
+    newExpenses.push(...expensesService.getExpenses(+userId, 'userId'));
+  } else {
+    newExpenses.push(...expensesService.getExpenses());
+  }
+
+  if (category) {
+    newExpenses = expensesService.getExpenses(
+      category,
+      'category',
+      newExpenses,
+    );
+  }
+
+  if (fromDate && toDate) {
+    newExpenses = expensesService.getExpenses(
+      { fromDate, toDate },
+      'spentAt',
+      newExpenses,
+    );
+  }
+
+  res.send(newExpenses);
 };
 
 module.exports.getExpense = (req, res) => {
@@ -19,17 +59,37 @@ module.exports.getExpense = (req, res) => {
 };
 
 module.exports.createExpense = (req, res) => {
-  const { name } = req.body;
+  const { userId, spentAt, title, amount, category, note } = req.body;
+  const newExpense = {
+    userId,
+    spentAt,
+    title,
+    amount,
+    category,
+    note,
+  };
 
-  if (!name) {
+  const expenseUser = usersService
+    .getUsers()
+    .find((user) => user.id === newExpense.userId);
+
+  if (
+    (!userId && userId !== 0) ||
+    !spentAt ||
+    !title ||
+    !amount ||
+    !category ||
+    !note ||
+    !expenseUser
+  ) {
     res.sendStatus(400);
 
     return;
   }
 
-  expensesService.createExpense(name);
+  res.statusCode = 201;
 
-  res.sendStatus(201);
+  res.send(expensesService.createExpense(newExpense));
 };
 
 module.exports.deleteExpense = (req, res) => {
@@ -48,15 +108,23 @@ module.exports.deleteExpense = (req, res) => {
 
 module.exports.updateExpense = (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { userId, spentAt, title, amount, category, note } = req.body;
 
-  if (!name || !id) {
+  if (!id) {
     res.sendStatus(400);
 
     return;
   }
 
-  const newExpense = expensesService.updateExpense({ id, name });
+  const newExpense = expensesService.updateExpense({
+    id,
+    userId,
+    spentAt,
+    title,
+    amount,
+    category,
+    note,
+  });
 
   if (!newExpense) {
     res.sendStatus(404);

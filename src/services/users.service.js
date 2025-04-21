@@ -2,6 +2,10 @@ const { genId } = require('./utility.service');
 
 let users = [];
 
+const setInitUsers = () => {
+  users = [];
+};
+
 const getUsers = () => {
   return users;
 };
@@ -35,6 +39,7 @@ const updateUser = (user) => {
 };
 
 module.exports = {
+  setInitUsers,
   getUsers,
   getUserById,
   deleteUser,

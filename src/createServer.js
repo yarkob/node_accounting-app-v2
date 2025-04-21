@@ -4,13 +4,14 @@ const express = require('express');
 const cors = require('cors');
 const usersRouter = require('./routes/users.route');
 const expensesRouter = require('./routes/expenses.route');
-const { getUsers } = require('./services/users.service');
+const { setInitUsers } = require('./services/users.service');
+const { setInitExpenses } = require('./services/expenses.service');
 
 function createServer() {
   const app = express();
 
-  // eslint-disable-next-line
-  console.log('server created', getUsers());
+  setInitUsers();
+  setInitExpenses();
 
   app.use(cors());
 

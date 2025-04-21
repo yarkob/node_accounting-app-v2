@@ -33,8 +33,6 @@ module.exports.createUser = (req, res) => {
 
   res.statusCode = 201;
 
-  // eslint-disable-next-line
-  console.log('user created');
   res.send(usersService.createUser(name));
 };
 
